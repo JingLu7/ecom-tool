@@ -1,7 +1,7 @@
 import json
 import requests
 import os
-from typing import Annotated
+from typing import Annotated, Optional
 from pydantic import Field, BaseModel
 
 from .settings import settings
@@ -50,7 +50,7 @@ def register_guide_tools(mcp: FastMCP) -> None:
     async def get_launch_strategy(
         generated_copywriting: Annotated[str, Field(description="文案工具生成的最终文案主体内容")],
         target_platform: Annotated[str, Field(description="目标推广平台，如：小红书, 抖音, 淘宝")],
-        generated_image_url: Annotated[str, Field(description="图片生成工具返回的宣传图片公开访问URL")] 
+        generated_image_url: Annotated[Optional[str], Field(description="图片生成工具返回的宣传图片公开访问URL")] 
     ) -> GuideResult:
         """
         根据生成的文案、图片URL和目标平台，提供专业的投放策略和合规指导方案。
@@ -60,28 +60,40 @@ def register_guide_tools(mcp: FastMCP) -> None:
         MODEL_NAME = settings.qwen_model_name
         API_KEY = settings.ai_api_key.get_secret_value()
         
+
+        image_analysis_instruction = ""
+        user_content_array = []
+
+        if generated_image_url and generated_image_url.strip():
+            image_analysis_instruction = "请结合图片URL对视觉风格、构图和转化潜力进行详细评估。"
+            user_content_array.append(
+                {"type": "image_url", "image_url": {"url": generated_image_url}}
+            )
+        else:
+            # 图片缺失，仅文本分析
+            user_analysis_instruction = "图片URL未提供，请重点评估文案与平台规则的契合度，跳过视觉风格评估部分。"
+
+            
         # 1. 构建用户输入 Prompt/指令
         user_instruction = f"""
         请分析以下内容，并提供指导方案：
         目标平台: {target_platform}
         待分析文案: {generated_copywriting}
         请严格遵循系统提示中的 JSON 格式输出。
+        {image_analysis_instruction}
         """
         
+        user_content_array.append(
+            {"type": "text", "text": user_instruction}
+        )
+
         # --- 2. 遵循 OpenAI 兼容 API 结构构建 Payload (多模态输入) ---
         try:
             payload = {
                 "model": MODEL_NAME,
                 "messages": [
                     {"role": "system", "content": GUIDE_SYSTEM_PROMPT},
-                    {"role": "user", 
-                     "content": [
-                         # 1. 图像输入结构
-                         {"type": "image_url", "image_url": {"url": generated_image_url}},
-                         # 2. 文本指令结构
-                         {"type": "text", "text": user_instruction}
-                     ]
-                    }
+                    {"role": "user","content": user_content_array}
                 ],
                 # 关键：开启 JSON 结构化输出
                 "response_format": {"type": "json_object"}, 
