@@ -50,7 +50,7 @@ def register_guide_tools(mcp: FastMCP) -> None:
     async def get_launch_strategy(
         generated_copywriting: Annotated[str, Field(description="文案工具生成的最终文案主体内容")],
         target_platform: Annotated[str, Field(description="目标推广平台，如：小红书, 抖音, 淘宝")],
-        generated_image_url: Annotated[Optional[str], Field(description="图片生成工具返回的宣传图片公开访问URL")] 
+        generated_image_url: Annotated[Optional[str], Field(description="可选，图片生成工具返回的宣传图片公开访问URL")] = None
     ) -> GuideResult:
         """
         根据生成的文案、图片URL和目标平台，提供专业的投放策略和合规指导方案。
