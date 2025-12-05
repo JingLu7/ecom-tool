@@ -42,7 +42,7 @@ Ecom-Tool 是一个专为电商和社交媒体设计的 AI 内容策略与生成
 
 1. 克隆项目仓库
 ```bash
-git clone <repository-url>
+git clone https://github.com/JingLu7/ecom-tool.git
 cd ecom-tool
 ```
 
@@ -157,3 +157,4 @@ uv run main.py
 - 服务器名称为 "ecom-content-agent-server" 
 - 项目采用模块化设计，各功能工具独立注册，便于扩展和维护 
 - 所有 AI 调用都经过错误处理，确保在 API 失败时返回友好的错误信息而不是崩溃
+
